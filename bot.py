@@ -9,17 +9,14 @@ import asyncio
 bot = commands.Bot(command_prefix = settings['prefix'])
 
 
-# launch bot
+# on launch
 @bot.event
 async def on_ready():
+	print('ok')
 	await bot.change_presence(activity=discord.Game(name='UrAnus'))
 
 
-@bot.command()
-async def test(ctx, arg):
-	await ctx.send(arg)
-
-
+# join voice channel
 @bot.command()
 async def podliva_join(ctx):
 	if (ctx.author.voice):
@@ -30,11 +27,20 @@ async def podliva_join(ctx):
 		podliva_leave(ctx)
 
 
+# send PETTHEPEEPO
+@bot.command()
+async def emojis(ctx):
+	print(ctx.guild.emojis)
+	await ctx.send('<a:PETTHEPEEPO:749651053288357979>')
+
+
+# leave voice channel
 @bot.command()
 async def podliva_leave(ctx):
 	await ctx.guild.voice_client.disconnect()
 
 
+# help ??
 @bot.command()
 async def podliva_help(ctx):
 	await ctx.send('какая помощь, я podliva')
@@ -52,6 +58,7 @@ async def on_message(message):
 		await message.channel.send('pidora otvet')
 
 	await bot.process_commands(message)
-	
 
+
+# run bot
 bot.run(settings['token']) 
