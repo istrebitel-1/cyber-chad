@@ -5,12 +5,15 @@ from resources import bot
 @bot.command(
 	name='r'
 )
-async def react(ctx, arg, msg_id=None):
+async def react(ctx, arg, msg_id=None, guild_id=None):
 
 	msg = ctx.message if msg_id == None else await ctx.fetch_message(msg_id)
-	emlist = ctx.guild.emojis
-	flg = False
-
+	
+	if guild_id == None:
+		emlist = ctx.guild.emojis
+	else:
+		emlist = bot.get_guild(int(guild_id)).emojis
+	
 	for emoji in emlist:
 
 		if arg.lower() == emoji.name.lower() and emoji.animated == True:
@@ -28,19 +31,27 @@ async def react(ctx, arg, msg_id=None):
 
 # send Gigachad emoji
 @bot.command(
-	name='e'
+	name='e',
+	aliases = ['emoji', 'emojis']
 )
-async def emojis(ctx, arg, qnt=None):
+async def emojis(ctx, arg, qnt=None, guild_id=None):
 
 	try:
 		qnt = 1 if qnt == None else int(qnt)
-		emlist = ctx.guild.emojis
+
 		flg = False
+
+		if guild_id == None:
+			emlist = ctx.guild.emojis
+		else:
+			guild = bot.get_guild(int(guild_id))
+			print(guild)
+			emlist = guild.emojis
 
 		for emoji in emlist:
 
 			if arg.lower() == emoji.name.lower() and emoji.animated == True:
-
+				
 				msg_text = ''
 
 				while int(qnt) != 0:
@@ -53,7 +64,9 @@ async def emojis(ctx, arg, qnt=None):
 				break
 
 			elif arg.lower() == emoji.name.lower():
-
+				
+				msg_text = ''
+				
 				while int(qnt) != 0:
 					msg_text += '<:%s:%i>' % (emoji.name, emoji.id)
 					qnt -= 1

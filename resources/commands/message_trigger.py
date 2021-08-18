@@ -27,7 +27,10 @@ async def on_message(message):
 	
 
 # podliva detect
-@bot.command()
+@bot.command(
+	name = 'test',
+	aliases = ['kekus']
+)
 async def test(ctx):
 
 	row_of_buttons = ActionRow(
@@ -37,17 +40,17 @@ async def test(ctx):
 			style=ButtonStyle.green
 		)
 	)
-	# Send a message with buttons
+	
+	await ctx.message.delete()
+	
 	msg = await ctx.send(
 		"А?",
 		components=[row_of_buttons]
 	)
-	# Wait for someone to click on them
 
 	def check(inter):
 		return inter.message.id == msg.id
 	inter = await ctx.wait_for_button_click(check)
-	# Send what you received
-	button_text = inter.clicked_button.label
-	await ctx.send('Получается, что %s - подлива' % (inter.author.mention))
+
+	await ctx.send('Получается, что %s - подлива <a:PETTHEPEEPO:749651053288357979>' % (inter.author.mention))
 	await msg.delete()
