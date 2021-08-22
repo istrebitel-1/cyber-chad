@@ -3,82 +3,79 @@ from resources import bot
 
 # reaction
 @bot.command(
-	name='r'
+    name='r',
+    aliases=['react', 'reaction']
 )
-async def react(ctx, arg, msg_id=None, guild_id=None):
+async def react(ctx, arg, msg_id=None, guild_id=715666531802939393):
 
-	msg = ctx.message if msg_id == None else await ctx.fetch_message(msg_id)
-	
-	if guild_id == None:
-		emlist = ctx.guild.emojis
-	else:
-		emlist = bot.get_guild(int(guild_id)).emojis
-	
-	for emoji in emlist:
+    msg = ctx.message if msg_id == None else await ctx.fetch_message(msg_id)
 
-		if arg.lower() == emoji.name.lower() and emoji.animated == True:
+    if guild_id == None:
+        emlist = ctx.guild.emojis
+    else:
+        emlist = bot.get_guild(int(guild_id)).emojis
 
-			await msg.add_reaction('<a:%s:%i>' % (emoji.name, emoji.id))
-			break
+    for emoji in emlist:
 
-		elif arg.lower() == emoji.name.lower():
+        if arg.lower() == emoji.name.lower() and emoji.animated == True:
+            await msg.add_reaction('<a:%s:%i>' % (emoji.name, emoji.id))
+            break
 
-			await msg.add_reaction('<:%s:%i>' % (emoji.name, emoji.id))
-			break
+        elif arg.lower() == emoji.name.lower():
+            await msg.add_reaction('<:%s:%i>' % (emoji.name, emoji.id))
+            break
 
-	await ctx.message.delete()
+    await ctx.message.delete()
 
 
 # send Gigachad emoji
 @bot.command(
-	name='e',
-	aliases = ['emoji', 'emojis']
+    name='e',
+    aliases=['emoji', 'emojis']
 )
-async def emojis(ctx, arg, qnt=None, guild_id=None):
+async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
 
-	try:
-		qnt = 1 if qnt == None else int(qnt)
+    try:
 
-		flg = False
+        flg = False
 
-		if guild_id == None:
-			emlist = ctx.guild.emojis
-		else:
-			guild = bot.get_guild(int(guild_id))
-			print(guild)
-			emlist = guild.emojis
+        if guild_id == None:
+            emlist = ctx.guild.emojis
+        else:
+            guild = bot.get_guild(int(guild_id))
+            emlist = guild.emojis
 
-		for emoji in emlist:
+        for emoji in emlist:
 
-			if arg.lower() == emoji.name.lower() and emoji.animated == True:
-				
-				msg_text = ''
+            if arg.lower() == emoji.name.lower() and emoji.animated == True:
 
-				while int(qnt) != 0:
-					msg_text += '<a:%s:%i>' % (emoji.name, emoji.id)
-					qnt -= 1
+                msg_text = ''
 
-				await ctx.reply(msg_text)
-				flg = True
+                while int(qnt) != 0:
+                    msg_text += '<a:%s:%i>' % (emoji.name, emoji.id)
+                    qnt -= 1
 
-				break
+                await ctx.reply(msg_text)
+                flg = True
 
-			elif arg.lower() == emoji.name.lower():
-				
-				msg_text = ''
-				
-				while int(qnt) != 0:
-					msg_text += '<:%s:%i>' % (emoji.name, emoji.id)
-					qnt -= 1
+                break
 
-				await ctx.reply(msg_text)
-				flg = True
+            elif arg.lower() == emoji.name.lower():
 
-				break
+                msg_text = ''
 
-		if flg == False:
-			await ctx.send('Что-то на эльфийском, не могу прочитать')
+                while int(qnt) != 0:
+                    msg_text += '<:%s:%i>' % (emoji.name, emoji.id)
+                    qnt -= 1
 
-	except Exception as e:
-		print(e)
-		await ctx.send('Многа букаф <:bonk:751150126046904532>')
+                await ctx.reply(msg_text)
+                flg = True
+
+                break
+
+        if flg == False:
+            await ctx.send('Что-то на эльфийском, не могу прочитать')
+
+    except Exception as e:
+        print(e)
+        await ctx.send('Многа букаф <:bonk:751150126046904532>')
