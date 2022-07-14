@@ -1,11 +1,9 @@
-import json
 import re
 
 import pyttsx3
 import requests
 import bs4
-
-from requests.api import get
+from gtts import gTTS
 
 
 synthesizer = pyttsx3.init()
@@ -19,9 +17,8 @@ def get_anek():
 
 
 def save_anek(anek):
-    synthesizer = pyttsx3.init()
+    myobj = gTTS(text=anek, lang='ru', slow=False)
+    myobj.save('audio/anek.mp3')
 
-    synthesizer.save_to_file(anek, 'audio/anek.mp3')
-    synthesizer.runAndWait()
 
     return 'success'
