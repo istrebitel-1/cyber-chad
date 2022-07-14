@@ -1,6 +1,7 @@
-from resources import bot
 from dislash import SlashClient, ActionRow, Button
 from dislash.interactions.message_components import ButtonStyle
+
+from resources import bot
 
 
 slash = SlashClient(bot)

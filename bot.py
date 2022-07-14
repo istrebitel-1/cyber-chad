@@ -1,6 +1,5 @@
 import discord
 
-
 from resources import bot
 from settings import settings
 
@@ -13,4 +12,5 @@ async def on_ready():
 
 
 # run bot
-bot.run(settings['token'])
+if __name__ == '__main__':
+    bot.run(settings['token'])

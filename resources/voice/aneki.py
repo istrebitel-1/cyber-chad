@@ -1,19 +1,21 @@
-import pyttsx3, requests, bs4
+import json
+import re
+
+import pyttsx3
+import requests
+import bs4
+
 from requests.api import get
+
 
 synthesizer = pyttsx3.init()
 
+
 def get_anek():
-    anek = ''
-    responce = requests.get('http://anekdotme.ru/random')
+    responce = requests.get('http://rzhunemogu.ru/RandJSON.aspx?CType=1')
     soup = bs4.BeautifulSoup(responce.text, 'html.parser')
-    anek_item = soup.select('.anekdot_text')
 
-    for item in anek_item:        
-        responce = (item.getText().strip())
-        anek = anek + responce + '\n\n'
-
-    return responce
+    return re.sub('[\r\n\{\}"]', '', soup).split(':')[1]
 
 
 def save_anek(anek):
