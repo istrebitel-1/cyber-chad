@@ -1,6 +1,5 @@
 import re
 
-import pyttsx3
 import requests
 import bs4
 from gtts import gTTS
