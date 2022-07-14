@@ -66,7 +66,7 @@ async def say(ctx):
             channel = ctx.message.author.voice.channel
             voice = await channel.connect()
             source = FFmpegPCMAudio(
-                executable="ffmpeg/ffmpeg.exe", source="audio/anek.mp3")
+                executable="ffmpeg", source="audio/anek.mp3")
             player = voice.play(source)
 
             await ctx.guild.voice_client.disconnect()
