@@ -7,17 +7,17 @@ from resources import bot
 slash = SlashClient(bot)
 
 
-# help ??
 @bot.command(
     name='p_help'
 )
 async def help(ctx):
-    await ctx.send('какая помощь, я podliva')
-    
+    """Help command"""
+    await ctx.send('Какая помощь, я podliva')
 
-# message in channel event
+
 @bot.event
 async def on_message(message):
+    """Every eessage in channel event"""
     if message.author == bot.user:
         return
 
@@ -27,33 +27,30 @@ async def on_message(message):
         await message.channel.send('pidora otvet')
 
     await bot.process_commands(message)
-    
 
-# podliva detect
+
 @bot.command(
-    name = 'test',
-    aliases = ['kekus']
+    name='test',
+    aliases=['kekus']
 )
-async def test(ctx):
-
+async def podliva_checker(ctx):
+    """Podliva user detection"""
+    def check_button_click(inter):
+        return inter.message.id == msg.id
     row_of_buttons = ActionRow(
         Button(
             label="jopa",
             custom_id="green",
-            style=ButtonStyle.green
-        )
+            style=ButtonStyle.green,
+        ),
     )
-    
+
     await ctx.message.delete()
-    
-    msg = await ctx.send(
-        "А?",
-        components=[row_of_buttons]
+
+    msg = await ctx.send("А?", components=[row_of_buttons])
+    inter = await ctx.wait_for_button_click(check_button_click)
+
+    await ctx.send(
+        f'Получается, что {inter.author.mention} - подлива <a:PETTHEPEEPO:749651053288357979>'
     )
-
-    def check(inter):
-        return inter.message.id == msg.id
-    inter = await ctx.wait_for_button_click(check)
-
-    await ctx.send('Получается, что %s - подлива <a:PETTHEPEEPO:749651053288357979>' % (inter.author.mention))
     await msg.delete()

@@ -1,23 +1,22 @@
 from resources import bot
 
 
-# reaction
 @bot.command(
     name='r',
     aliases=['react', 'reaction']
 )
 async def react(ctx, arg, msg_id=None, guild_id=715666531802939393):
+    """Send reaction to message"""
+    msg = ctx.message if msg_id is None else await ctx.fetch_message(msg_id)
 
-    msg = ctx.message if msg_id == None else await ctx.fetch_message(msg_id)
-
-    if guild_id == None:
+    if guild_id is None:
         emlist = ctx.guild.emojis
     else:
         emlist = bot.get_guild(int(guild_id)).emojis
 
     for emoji in emlist:
 
-        if arg.lower() == emoji.name.lower() and emoji.animated == True:
+        if arg.lower() == emoji.name.lower() and emoji.animated:
             await msg.add_reaction('<a:%s:%i>' % (emoji.name, emoji.id))
             break
 
@@ -28,18 +27,17 @@ async def react(ctx, arg, msg_id=None, guild_id=715666531802939393):
     await ctx.message.delete()
 
 
-# send Gigachad emoji
 @bot.command(
     name='e',
     aliases=['emoji', 'emojis']
 )
 async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
+    """Send Gigachad's club emoji"""
 
     try:
-
         flg = False
 
-        if guild_id == None:
+        if guild_id is None:
             emlist = ctx.guild.emojis
         else:
             guild = bot.get_guild(int(guild_id))
@@ -47,8 +45,7 @@ async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
 
         for emoji in emlist:
 
-            if arg.lower() == emoji.name.lower() and emoji.animated == True:
-
+            if arg.lower() == emoji.name.lower() and emoji.animated:
                 msg_text = ''
 
                 while int(qnt) != 0:
@@ -57,11 +54,9 @@ async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
 
                 await ctx.reply(msg_text)
                 flg = True
-
                 break
 
             elif arg.lower() == emoji.name.lower():
-
                 msg_text = ''
 
                 while int(qnt) != 0:
@@ -70,10 +65,9 @@ async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
 
                 await ctx.reply(msg_text)
                 flg = True
-
                 break
 
-        if flg == False:
+        if not flg:
             await ctx.send('Что-то на эльфийском, не могу прочитать')
 
     except Exception as e:

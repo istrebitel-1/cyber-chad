@@ -1,5 +1,3 @@
-from collections import deque
-
 from youtube_dl import YoutubeDL
 from discord.player import FFmpegPCMAudio
 
@@ -15,11 +13,11 @@ class Queue:
     def append_track(self, url):
         """Добавление трека в куеуе"""
         self.tracks_url.append(url)
-        
+
     def pop_track(self):
         """попит левый трецк"""
         self.tracks_url.pop(0)
-        
+
     def clear_queue(self):
         """Очищает очередб"""
         self.tracks_url = []
@@ -33,13 +31,15 @@ tracks_queue = Queue()
     aliases=['join', 'get_your_ass_back_here'],
 )
 async def join(ctx):
-    """Join voice channel command"""
+    """Join voice channel and says 'nice c**k''"""
     if (ctx.author.voice):
         channel = ctx.message.author.voice.channel
         voice = await channel.connect()
         source = FFmpegPCMAudio(
-            executable="ffmpeg/ffmpeg.exe", source="audio/nc.mp3")
-        player = voice.play(source)
+            executable="ffmpeg/ffmpeg.exe",
+            source="audio/nc.mp3",
+        )
+        voice.play(source)
 
 
 @bot.command(
@@ -47,7 +47,7 @@ async def join(ctx):
     aliases=['leave', 'fuck_you'],
 )
 async def leave(ctx):
-    """Leave voice channel command"""
+    """Leave voice channel"""
     if (ctx.voice_client):
         await ctx.guild.voice_client.disconnect()
     else:
@@ -59,15 +59,17 @@ async def leave(ctx):
     aliases=['anek'],
 )
 async def say(ctx):
-    """Tells anekdot kekw"""
+    """Say anek from mp3 file"""
     if (ctx.author.voice):
-        
+
         if save_anek(get_anek()) == 'success':
             channel = ctx.message.author.voice.channel
             voice = await channel.connect()
             source = FFmpegPCMAudio(
-                executable="ffmpeg/ffmpeg.exe", source="audio/anek.mp3")
-            player = voice.play(source)
+                executable="ffmpeg/ffmpeg.exe",
+                source="audio/anek.mp3",
+            )
+            voice.play(source)
 
             await ctx.guild.voice_client.disconnect()
 
@@ -78,14 +80,14 @@ async def say(ctx):
 )
 async def play(ctx, youtube_url):
     """Plays youtube audio"""
-    YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist':'False'}
+    YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
     if (ctx.author.voice):
         channel = ctx.message.author.voice.channel
-        
+
         try:
             voice = await channel.connect()
-        except:
+        except Exception:
             voice = channel
 
         tracks_queue.clear_queue()

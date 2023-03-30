@@ -1,11 +1,8 @@
-import json
 import re
 
 import pyttsx3
 import requests
 import bs4
-
-from requests.api import get
 
 
 synthesizer = pyttsx3.init()
