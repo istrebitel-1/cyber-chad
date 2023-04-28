@@ -1,7 +1,15 @@
-from resources import bot
+from discord.ext import commands
+
+from main import bot
 
 
-@bot.command(
+@commands.group()
+async def emojis_cmds(ctx):
+    if ctx.invoked_subcommand is None:
+        await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
+
+
+@emojis_cmds.command(
     name='r',
     aliases=['react', 'reaction']
 )
@@ -27,11 +35,11 @@ async def react(ctx, arg, msg_id=None, guild_id=715666531802939393):
     await ctx.message.delete()
 
 
-@bot.command(
+@emojis_cmds.command(
     name='e',
     aliases=['emoji', 'emojis']
 )
-async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
+async def emoji(ctx, arg, qnt=1, guild_id=715666531802939393):
     """Send Gigachad's club emoji"""
 
     try:
@@ -73,3 +81,9 @@ async def emojis(ctx, arg, qnt=1, guild_id=715666531802939393):
     except Exception as e:
         print(e)
         await ctx.send('Многа букаф <:bonk:751150126046904532>')
+
+
+async def setup(bot):
+    bot.add_command(emojis_cmds)
+    bot.add_command(react)
+    bot.add_command(emoji)

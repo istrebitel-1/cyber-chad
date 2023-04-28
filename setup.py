@@ -13,10 +13,12 @@ setup(
     include_package_data=True,
     install_requires=[
         'discord~=2.2.2',
-        'dislash.py~=1.4.9',
         'requests~`2.28.2',
         'beautifulsoup4~=4.12.0',
-        'pyttsx3~=',
+        'pyttsx3~=2.90',
+        'python_vlc~=3.0.18121',
+        'pynacl~=1.5.0',
+        'yt-dlp~=2023.3.4',
     ],
     extras_require={
         'code-quality': ['flake8~=6.0.0', 'mypy~=0.991'],

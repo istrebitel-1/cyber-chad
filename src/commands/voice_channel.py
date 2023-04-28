@@ -1,8 +1,14 @@
-from youtube_dl import YoutubeDL
+import yt_dlp as youtube_dl
 from discord.player import FFmpegPCMAudio
+from discord.ext import commands
 
-from resources import bot
-from resources.voice import save_anek, get_anek
+from src.voice.aneki import save_anek, get_anek
+
+
+@commands.group()
+async def voice(ctx):
+    if ctx.invoked_subcommand is None:
+        await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
 
 class Queue:
@@ -26,7 +32,7 @@ class Queue:
 tracks_queue = Queue()
 
 
-@bot.command(
+@voice.command(
     name='podliva_join',
     aliases=['join', 'get_your_ass_back_here'],
 )
@@ -42,7 +48,7 @@ async def join(ctx):
         voice.play(source)
 
 
-@bot.command(
+@voice.command(
     name='podliva_leave',
     aliases=['leave', 'fuck_you'],
 )
@@ -54,7 +60,7 @@ async def leave(ctx):
         pass
 
 
-@bot.command(
+@voice.command(
     name='say',
     aliases=['anek'],
 )
@@ -74,7 +80,7 @@ async def say(ctx):
             await ctx.guild.voice_client.disconnect()
 
 
-@bot.command(
+@voice.command(
     name='play',
     aliases=['p'],
 )
@@ -94,10 +100,14 @@ async def play(ctx, youtube_url):
         tracks_queue.append_track(youtube_url)
 
         for url in tracks_queue.tracks_url:
-            with YoutubeDL(YDL_OPTIONS) as ydl:
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
                 info = ydl.extract_info(url, download=False)
-            URL = info['formats'][0]['url']
-            voice.play(FFmpegPCMAudio(URL, **FFMPEG_OPTIONS))
+            audio = info['formats'][3]['url']
+            voice.play(FFmpegPCMAudio(
+                source=audio,
+                executable="ffmpeg/ffmpeg.exe",
+                **FFMPEG_OPTIONS
+            ))
             voice.is_playing()
             tracks_queue.pop_track()
 
@@ -106,9 +116,9 @@ async def play(ctx, youtube_url):
         return
 
 
-@bot.command(
+@voice.command(
     name='queye',
-    aliases=['куеуе', 'q']
+    aliases=['куеуе', 'q'],
 )
 async def queue(ctx, url):
     """Add track to queue"""
@@ -116,10 +126,20 @@ async def queue(ctx, url):
     await ctx.send("Добавлен трецк флек$$овый")
 
 
-@bot.command(
+@voice.command(
     name='clear',
 )
 async def clear(ctx):
     """Clear tracks queue"""
     tracks_queue.clear_queue()
     await ctx.send("Очередь очищена")
+
+
+async def setup(bot):
+    bot.add_command(voice)
+    bot.add_command(join)
+    bot.add_command(leave)
+    bot.add_command(say)
+    bot.add_command(play)
+    bot.add_command(queue)
+    bot.add_command(clear)
