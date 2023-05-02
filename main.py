@@ -5,7 +5,8 @@ import discord
 from discord.ext import commands
 
 from src import configure_logging
-from settings import settings
+from src.constants import VOICE_MESSAGE_IND, VOICE_MESSAGE_GIF
+from src.settings import get_settings
 
 
 configure_logging()
@@ -28,24 +29,29 @@ async def on_ready():
         module = f'src.commands.{cmd_file.name[:-3]}'
         await bot.load_extension(module)
 
-        logger.debug(f'Загружен модуль {module}')
+        logger.debug(f'Loaded module {module}')
 
+    logger.info('Initialization complete')
     await bot.change_presence(activity=discord.Game(name='UrAnus'))
 
 
 @bot.event
-async def on_message(message):
-    """Every eessage in channel event"""
+async def on_message(message: discord.Message):
+    """Every message in channel event"""
     if message.author == bot.user:
         return
 
-    if message.content.lower() == 'да':
-        await message.channel.send('pizda')
+    if message.attachments and message.attachments[0].filename == VOICE_MESSAGE_IND:
+        await message.reply(VOICE_MESSAGE_GIF)
+    elif message.content.lower() == 'да':
+        await message.reply('pizda')
     elif message.content.lower() == 'нет':
-        await message.channel.send('pidora otvet')
+        await message.reply('pidora otvet')
 
     await bot.process_commands(message)
 
 
 if __name__ == '__main__':
-    bot.run(settings['token'])
+    settings = get_settings()
+
+    bot.run(token=settings.token)

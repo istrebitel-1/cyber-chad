@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-version = '0.1.0'
+version = '0.2.0'
 
 setup(
     name='cyber-chad',
@@ -13,11 +13,12 @@ setup(
     include_package_data=True,
     install_requires=[
         'discord~=2.2.2',
-        'requests~`2.28.2',
+        'requests~=2.28.2',
         'beautifulsoup4~=4.12.0',
         'pyttsx3~=2.90',
         'python_vlc~=3.0.18121',
         'pynacl~=1.5.0',
+        'pydantic~=1.10.7',
         'yt-dlp~=2023.3.4',
     ],
     extras_require={

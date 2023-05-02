@@ -10,7 +10,10 @@
             "request": "launch",
             "program": "main.py",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "env": {
+                "TOKEN": "ODc0NjcwODE3MDg1MDk1OTY2.GUfQ-v.ov_YY7O7WWpDtVMBVeAJGgktl_L1mv2NmPmqG0"
+            }
         }
     ]
 }

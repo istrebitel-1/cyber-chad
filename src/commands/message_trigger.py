@@ -18,7 +18,7 @@ class PodlivaView(View):
 
 
 @commands.group()
-async def message_trigger(ctx):
+async def message_trigger(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -26,7 +26,7 @@ async def message_trigger(ctx):
 @message_trigger.command(
     name='p_help',
 )
-async def help(ctx):
+async def help(ctx: commands.Context):
     """Help command"""
     await ctx.send('Какая помощь, я podliva')
 
@@ -41,7 +41,7 @@ async def podliva_checker(ctx: commands.Context):
     await ctx.send("А?", view=PodlivaView())
 
 
-async def setup(bot):
+async def setup(bot: commands.bot.Bot):
     bot.add_command(help)
     bot.add_command(podliva_checker)
     bot.add_command(message_trigger)

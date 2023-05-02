@@ -1,10 +1,15 @@
+import logging
+
 from discord.ext import commands
 
-from main import bot
+from src.constants import GIGACHADS_GUILD_ID
+
+
+logger = logging.getLogger(__name__)
 
 
 @commands.group()
-async def emojis_cmds(ctx):
+async def emojis_cmds(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -13,77 +18,59 @@ async def emojis_cmds(ctx):
     name='r',
     aliases=['react', 'reaction']
 )
-async def react(ctx, arg, msg_id=None, guild_id=715666531802939393):
+async def react(
+        ctx: commands.Context,
+        requested_emoji: str,
+        msg_id: int = None,
+        guild_id: int = None,
+):
     """Send reaction to message"""
-    msg = ctx.message if msg_id is None else await ctx.fetch_message(msg_id)
-
-    if guild_id is None:
-        emlist = ctx.guild.emojis
-    else:
-        emlist = bot.get_guild(int(guild_id)).emojis
+    msg = ctx.message if not msg_id else await ctx.fetch_message(msg_id)
+    emlist = ctx.guild.emojis if not guild_id else ctx.bot.get_guild(int(GIGACHADS_GUILD_ID)).emojis
 
     for emoji in emlist:
+        if requested_emoji.lower() == emoji.name.lower():
+            await msg.add_reaction(f'<{"a" if emoji.animated else ""}:{emoji.name}:{emoji.id}>')
+            await ctx.message.delete()
+            return
 
-        if arg.lower() == emoji.name.lower() and emoji.animated:
-            await msg.add_reaction('<a:%s:%i>' % (emoji.name, emoji.id))
-            break
-
-        elif arg.lower() == emoji.name.lower():
-            await msg.add_reaction('<:%s:%i>' % (emoji.name, emoji.id))
-            break
-
-    await ctx.message.delete()
+    await ctx.send('Что-то на эльфийском, не могу прочитать')
 
 
 @emojis_cmds.command(
     name='e',
     aliases=['emoji', 'emojis']
 )
-async def emoji(ctx, arg, qnt=1, guild_id=715666531802939393):
+async def emoji(
+        ctx: commands.Context,
+        requested_emoji: str,
+        guild_id: int = None,
+        qnt: int = 1,
+):
     """Send Gigachad's club emoji"""
-
     try:
-        flg = False
+        emlist = ctx.guild.emojis if not guild_id else ctx.bot.get_guild(guild_id).emojis
 
-        if guild_id is None:
-            emlist = ctx.guild.emojis
-        else:
-            guild = bot.get_guild(int(guild_id))
-            emlist = guild.emojis
+        logger.info(f'Searching {requested_emoji} in {emlist}')
 
         for emoji in emlist:
+            if requested_emoji.lower() == emoji.name.lower():
+                message = ''.join([
+                    f'<{"a" if emoji.animated else ""}:{emoji.name}:{emoji.id}>'
+                    for _ in range(qnt)
+                ])
 
-            if arg.lower() == emoji.name.lower() and emoji.animated:
-                msg_text = ''
+                await ctx.reply(message)
+                return
 
-                while int(qnt) != 0:
-                    msg_text += '<a:%s:%i>' % (emoji.name, emoji.id)
-                    qnt -= 1
-
-                await ctx.reply(msg_text)
-                flg = True
-                break
-
-            elif arg.lower() == emoji.name.lower():
-                msg_text = ''
-
-                while int(qnt) != 0:
-                    msg_text += '<:%s:%i>' % (emoji.name, emoji.id)
-                    qnt -= 1
-
-                await ctx.reply(msg_text)
-                flg = True
-                break
-
-        if not flg:
-            await ctx.send('Что-то на эльфийском, не могу прочитать')
+        await ctx.send('404 эмоджи нот фаунд <:bonk:751150126046904532>')
 
     except Exception as e:
-        print(e)
-        await ctx.send('Многа букаф <:bonk:751150126046904532>')
+        logger.error(e)
+        await ctx.send('Я сломався <:bonk:751150126046904532>')
 
 
-async def setup(bot):
+async def setup(bot: commands.bot.Bot):
     bot.add_command(emojis_cmds)
     bot.add_command(react)
     bot.add_command(emoji)
