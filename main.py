@@ -54,4 +54,4 @@ async def on_message(message: discord.Message):
 if __name__ == '__main__':
     settings = get_settings()
 
-    bot.run(token=settings.token)
+    bot.run(token=settings.TOKEN)

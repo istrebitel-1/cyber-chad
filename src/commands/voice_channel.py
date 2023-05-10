@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Dict
 
@@ -5,7 +6,8 @@ import yt_dlp as youtube_dl
 from discord.player import FFmpegPCMAudio
 from discord.ext import commands
 
-from src.voice.aneki import save_anek, get_anek
+from src.services.aneki import save_anek, get_anek
+from src.settings import get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -22,17 +24,31 @@ class Queue:
     def __init__(self) -> None:
         self.tracks_url = []
 
-    def append_track(self, url):
+    @property
+    def is_empty(self) -> bool:
+        return self.tracks_url == []
+
+    def append(self, url) -> None:
         """Добавление трека в куеуе"""
         self.tracks_url.append(url)
 
-    def pop_track(self):
+    def pop(self) -> str | None:
         """попит левый трецк"""
-        self.tracks_url.pop(0)
+        return self.tracks_url.pop(0) if self.tracks_url else None
 
-    def clear_queue(self):
+    def clear(self) -> None:
         """Очищает очередб"""
         self.tracks_url = []
+
+
+def get_guild_queue(guild_id: int) -> Queue:
+    """Получение голосового канала"""
+    queue_: Queue = tracks_queue.get(guild_id) or Queue()
+
+    if queue_.is_empty:
+        tracks_queue[guild_id] = queue_
+
+    return queue_
 
 
 tracks_queue: Dict[str, Queue] = {}
@@ -44,14 +60,20 @@ tracks_queue: Dict[str, Queue] = {}
 )
 async def join(ctx: commands.Context):
     """Join voice channel and says 'nice c**k''"""
-    if ctx.author.voice:
-        channel = ctx.message.author.voice.channel
-        voice = await channel.connect()
-        source = FFmpegPCMAudio(
-            executable="ffmpeg/ffmpeg.exe",
-            source="audio/nc.mp3",
-        )
-        voice.play(source)
+    if not ctx.author.voice:
+        logger.warning(f'{ctx.author.mention} not connected to voice')
+        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
+        return
+
+    settings = get_settings()
+    channel = ctx.message.author.voice.channel
+    voice = await channel.connect()
+
+    source = FFmpegPCMAudio(
+        executable=settings.FFMPEG_EXECUTABLE_PATH,
+        source="audio/nc.mp3",
+    )
+    voice.play(source)
 
 
 @voice.command(
@@ -72,17 +94,30 @@ async def leave(ctx: commands.Context):
 )
 async def say(ctx: commands.Context):
     """Say anek from mp3 file"""
-    if ctx.author.voice:
-        if save_anek(get_anek()) == 'success':
-            channel = ctx.message.author.voice.channel
-            voice = await channel.connect()
-            source = FFmpegPCMAudio(
-                executable="ffmpeg/ffmpeg.exe",
-                source="audio/anek.mp3",
-            )
-            voice.play(source)
+    if not ctx.author.voice:
+        logger.warning(f'{ctx.author.mention} not connected to voice')
+        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
+        return
 
-            await ctx.guild.voice_client.disconnect()
+    if not save_anek(get_anek()) == 'success':
+        logger.error('Error to save "anek"')
+        return
+
+    settings = get_settings()
+
+    channel = ctx.message.author.voice.channel
+    voice = await channel.connect()
+    source = FFmpegPCMAudio(
+        executable=settings.FFMPEG_EXECUTABLE_PATH,
+        source=settings.JOKES_SAVE_PATH,
+    )
+
+    voice.play(source)
+
+    while voice.is_playing():
+        await asyncio.sleep(1)
+
+    await ctx.guild.voice_client.disconnect()
 
 
 @voice.command(
@@ -93,61 +128,70 @@ async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow
     """Plays youtube audio"""
     YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-    if ctx.author.voice:
-        channel = ctx.message.author.voice.channel
 
-        try:
-            voice = await channel.connect()
-        except Exception:
-            voice = channel
+    settings = get_settings()
 
-        queue_ = tracks_queue.get(ctx.guild.id)
-        if not queue_:
-            tracks_queue[ctx.guild.id] = []
-
-        queue_.clear_queue()
-        queue_.append_track(youtube_url)
-
-        for url in queue_.tracks_url:
-            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-                info = ydl.extract_info(url, download=False)
-
-            # TODO: enum (ultralow, low, medium)
-            try:
-                for format_ in info['formats']:
-                    if format_['format_note'] == quality:
-                        audio = format_['url']
-
-                if not audio:
-                    logger.warning(f'Не найдено качество {quality}')
-                    voice.disconnect()
-                    ctx.send(f'Не найдено качество {quality}')
-                    return
-            except Exception as e:
-                logger.error(e)
-                voice.disconnect()
-                return
-
-            voice.play(FFmpegPCMAudio(
-                source=audio,
-                executable="ffmpeg/ffmpeg.exe",
-                **FFMPEG_OPTIONS
-            ))
-            voice.is_playing()
-            tracks_queue.pop_track()
-
-    else:
-        await ctx.send("Already playing song")
+    if not ctx.author.voice:
+        logger.warning(f'{ctx.author.mention} not connected to voice')
+        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
+
+    voice = ctx.voice_client if ctx.voice_client else await ctx.message.author.voice.channel.connect()
+    voice.stop()
+
+    queue_ = get_guild_queue(ctx.guild.id)
+    queue_.clear()
+    queue_.append(youtube_url)
+
+    while True:
+        if not (url := get_guild_queue(ctx.guild.id).pop()):
+            break
+
+        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+            info = ydl.extract_info(url, download=False)
+
+        # TODO: enum (ultralow, low, medium)
+        try:
+            for format_ in info['formats']:
+                if format_['format_note'] == quality:
+                    audio = format_['url']
+
+            if not audio:
+                logger.warning(f'Не найдено качество {quality}')
+                voice.disconnect()
+                ctx.send(f'Не найдено качество {quality}')
+                return
+        except Exception as e:
+            logger.error(e)
+            voice.disconnect()
+            return
+
+        voice.play(FFmpegPCMAudio(
+            source=audio,
+            executable=settings.FFMPEG_EXECUTABLE_PATH,
+            **FFMPEG_OPTIONS,
+        ))
+
+        while voice.is_playing():
+            await asyncio.sleep(1)
+
+    await ctx.guild.voice_client.disconnect()
 
 
 @voice.command(
     name='queye',
     aliases=['куеуе', 'q'],
 )
-async def queue(ctx: commands.Context, url):
+async def queue(ctx: commands.Context, youtube_url: str):
     """Add track to queue"""
-    tracks_queue.append_track(url)
+    queue_: Queue | None = tracks_queue.get(ctx.guild.id) or Queue()
+
+    if not queue_:
+        tracks_queue[ctx.guild.id] = queue_
+
+    queue_.clear()
+    queue_.append(youtube_url)
+
     await ctx.send("Добавлен трецк флек$$овый")
 
 
@@ -156,7 +200,11 @@ async def queue(ctx: commands.Context, url):
 )
 async def clear(ctx: commands.Context):
     """Clear tracks queue"""
-    tracks_queue.clear_queue()
+    queue_: Queue | None = tracks_queue.get(ctx.guild.id) or Queue()
+
+    if not queue_:
+        tracks_queue[ctx.guild.id] = queue_
+
     await ctx.send("Очередь очищена")
 
 
