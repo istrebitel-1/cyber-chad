@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 import yt_dlp as youtube_dl
 from discord.player import FFmpegPCMAudio
@@ -122,7 +122,7 @@ async def say(ctx: commands.Context):
     name='play',
     aliases=['p'],
 )
-async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow'):
+async def play(ctx: commands.Context, youtube_url: str):
     """Plays youtube audio"""
     YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
     FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
@@ -148,21 +148,23 @@ async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow
         with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
             info = ydl.extract_info(url, download=False)
 
-        # TODO: enum (ultralow, low, medium)
+        # TODO: enum
+        allowed_quality = ('ultralow', 'low', 'medium')
         try:
+            audio: Optional[str] = None
             for format_ in info['formats']:
                 if isinstance(format_, dict) and \
-                        format_.get('format_note') == quality:
+                        format_.get('format_note') in allowed_quality:
                     audio = format_['url']
+                    break
 
             if not audio:
-                logger.warning(f'Не найдено качество {quality}')
-                voice.disconnect()
-                ctx.send(f'Не найдено качество {quality}')
+                warning_message = 'Не найден контекст для воспроизведения дорожки'
+                logger.warning(warning_message)
+                await ctx.send(warning_message)
                 return
         except Exception as e:
             logger.error(e)
-            await voice.disconnect()
             return
 
         voice.play(FFmpegPCMAudio(
@@ -174,7 +176,7 @@ async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow
         while voice.is_playing():
             await asyncio.sleep(1)
 
-    await ctx.guild.voice_client.disconnect()
+    await ctx.send('Очередь треков завершилась, я пошёл отдыхать')
 
 
 @voice.command(
