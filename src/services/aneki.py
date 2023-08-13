@@ -1,12 +1,10 @@
 import json
+from typing import Optional
 
-import pyttsx3
 import requests
 
+from src.services.synthesize import synthesize_text
 from src.settings import get_settings
-
-
-synthesizer = pyttsx3.init()
 
 
 def get_anek() -> str:
@@ -18,10 +16,8 @@ def get_anek() -> str:
     return anek
 
 
-def save_anek(anek):
-    synthesizer = pyttsx3.init()
-
-    synthesizer.save_to_file(anek, 'audio/anek.mp3')
-    synthesizer.runAndWait()
-
-    return 'success'
+def save_anek(anek: str) -> Optional[str]:
+    try:
+        return synthesize_text(text=anek)
+    except Exception:
+        return None

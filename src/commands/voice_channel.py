@@ -99,7 +99,7 @@ async def say(ctx: commands.Context):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
-    if not save_anek(get_anek()) == 'success':
+    if not (anek_path := save_anek(get_anek())):
         logger.error('Error to save "anek"')
         return
 
@@ -109,7 +109,7 @@ async def say(ctx: commands.Context):
     voice = await channel.connect()
     source = FFmpegPCMAudio(
         executable=settings.FFMPEG_EXECUTABLE_PATH,
-        source=settings.JOKES_SAVE_PATH,
+        source=anek_path,
     )
 
     voice.play(source)
