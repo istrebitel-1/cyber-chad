@@ -151,7 +151,8 @@ async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow
         # TODO: enum (ultralow, low, medium)
         try:
             for format_ in info['formats']:
-                if format_['format_note'] == quality:
+                if isinstance(format_, dict) and \
+                        format_.get('format_note') == quality:
                     audio = format_['url']
 
             if not audio:
@@ -161,7 +162,7 @@ async def play(ctx: commands.Context, youtube_url: str, quality: str = 'ultralow
                 return
         except Exception as e:
             logger.error(e)
-            voice.disconnect()
+            await voice.disconnect()
             return
 
         voice.play(FFmpegPCMAudio(

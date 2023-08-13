@@ -19,7 +19,7 @@ setup(
         'python_vlc~=3.0.18121',
         'pynacl~=1.5.0',
         'pydantic~=1.10.7',
-        'yt-dlp~=2023.3.4',
+        'yt-dlp~=2023.7.6',
     ],
     extras_require={
         'code-quality': ['flake8~=6.0.0', 'mypy~=0.991'],
