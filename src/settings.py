@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     JOKES_URL: str = 'http://rzhunemogu.ru/RandJSON.aspx?CType=1'
     JOKES_SAVE_PATH: str | Path = 'audio/anek.mp3'
 
+    SBER_SALUTE_CLIENT_SECRET: str
+    SBER_SALUTE_AUTH_DATA: str
+
 
 def get_settings() -> Settings:
     """Get app settings"""
