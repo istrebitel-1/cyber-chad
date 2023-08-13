@@ -20,7 +20,7 @@ def synthesize_text(text: str) -> str:
 
     session = requests.Session()
 
-    responce = session.post(
+    response = session.post(
         url=SBER_SALUTE_API_URL,
         headers={
             'Authorization': f'Basic {settings.SBER_SALUTE_AUTH_DATA}',
@@ -33,7 +33,7 @@ def synthesize_text(text: str) -> str:
         }
     )
 
-    token_data: Dict = json.loads(responce.text)
+    token_data: Dict = json.loads(response.text)
 
     auth_headers = {
         'Authorization': f'Bearer {token_data.get("access_token")}'

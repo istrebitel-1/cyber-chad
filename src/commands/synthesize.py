@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from discord.player import FFmpegPCMAudio
+from discord.player import PCMVolumeTransformer
 from discord.ext import commands
 from discord import File
 
@@ -20,7 +21,7 @@ async def synthesize(ctx: commands.Context):
 
 @synthesize.command(
     name='synthesize',
-    aliases=['text2speech'],
+    aliases=['s'],
 )
 async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: bool = True):
     """Synthesize speech from text"""
@@ -48,6 +49,7 @@ async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: b
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=audio_file,
     )
+    source = PCMVolumeTransformer(source, volume=2.0)
 
     voice.play(source)
 

@@ -1,6 +1,7 @@
 __pycache__/
 
 .vscode/*
+.idea/
 .env/
 env/
 

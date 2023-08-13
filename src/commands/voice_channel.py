@@ -3,6 +3,7 @@ import logging
 from typing import Dict, Optional
 
 import yt_dlp as youtube_dl
+from discord import File
 from discord.player import FFmpegPCMAudio
 from discord.ext import commands
 
@@ -99,9 +100,12 @@ async def say(ctx: commands.Context):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
-    if not (anek_path := save_anek(get_anek())):
+    anek_text = get_anek()
+    if not (anek_path := save_anek(anek_text)):
         logger.error('Error to save "anek"')
         return
+
+    await ctx.reply(anek_text, file=File(anek_path))
 
     settings = get_settings()
 
@@ -149,7 +153,7 @@ async def play(ctx: commands.Context, youtube_url: str):
             info = ydl.extract_info(url, download=False)
 
         # TODO: enum
-        allowed_quality = ('ultralow', 'low', 'medium')
+        allowed_quality = ('low', 'medium')
         try:
             audio: Optional[str] = None
             for format_ in info['formats']:

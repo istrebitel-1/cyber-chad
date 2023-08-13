@@ -43,10 +43,11 @@ async def on_message(message: discord.Message):
 
     if message.attachments and message.attachments[0].filename == VOICE_MESSAGE_IND:
         await message.reply(VOICE_MESSAGE_GIF)
-    elif message.content.lower() == 'да':
-        await message.reply('pizda')
-    elif message.content.lower() == 'нет':
-        await message.reply('pidora otvet')
+
+    # elif message.content.lower() == 'да':
+    #     await message.reply('pizda')
+    # elif message.content.lower() == 'нет':
+    #     await message.reply('pidora otvet')
 
     await bot.process_commands(message)
 

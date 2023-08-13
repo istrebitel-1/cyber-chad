@@ -10,8 +10,8 @@ from src.settings import get_settings
 def get_anek() -> str:
     settings = get_settings()
 
-    responce = requests.get(settings.JOKES_URL)
-    anek = json.loads(responce.text.replace('\r\n', ' '))['content']
+    response = requests.get(settings.JOKES_URL)
+    anek = json.loads(response.text.replace('\r\n', ' '))['content']
 
     return anek
 
