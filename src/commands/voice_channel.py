@@ -67,7 +67,7 @@ async def join(ctx: commands.Context):
 
     settings = get_settings()
     channel = ctx.message.author.voice.channel
-    voice = await channel.connect()
+    voice = ctx.voice_client if ctx.voice_client else await channel.connect()
 
     source = FFmpegPCMAudio(
         executable=settings.FFMPEG_EXECUTABLE_PATH,
@@ -106,7 +106,7 @@ async def say(ctx: commands.Context):
     settings = get_settings()
 
     channel = ctx.message.author.voice.channel
-    voice = await channel.connect()
+    voice = ctx.voice_client if ctx.voice_client else await channel.connect()
     source = FFmpegPCMAudio(
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=anek_path,
@@ -116,8 +116,6 @@ async def say(ctx: commands.Context):
 
     while voice.is_playing():
         await asyncio.sleep(1)
-
-    await ctx.guild.voice_client.disconnect()
 
 
 @voice.command(

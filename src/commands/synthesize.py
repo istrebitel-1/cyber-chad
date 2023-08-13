@@ -35,14 +35,15 @@ async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: b
         logger.error(f'{e.__class__}: {str(e)}')
         return None
 
+    await ctx.reply(file=File(audio_file))
+
     if not play_to_voice:
-        await ctx.reply(file=File(audio_file))
         return None
 
     settings = get_settings()
 
     channel = ctx.message.author.voice.channel
-    voice = await channel.connect()
+    voice = ctx.voice_client if ctx.voice_client else await channel.connect()
     source = FFmpegPCMAudio(
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=audio_file,
@@ -52,8 +53,6 @@ async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: b
 
     while voice.is_playing():
         await asyncio.sleep(1)
-
-    await ctx.guild.voice_client.disconnect()
 
 
 async def setup(bot: commands.bot.Bot):
