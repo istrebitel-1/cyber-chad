@@ -1,10 +1,11 @@
 import asyncio
 import logging
+from json import JSONDecodeError
 from typing import Dict, Optional
 
 import yt_dlp as youtube_dl
 from discord import File
-from discord.player import FFmpegPCMAudio
+from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 
 from src.services.aneki import save_anek, get_anek
@@ -100,7 +101,13 @@ async def say(ctx: commands.Context):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
-    anek_text = get_anek()
+    try:
+        anek_text = get_anek()
+    except JSONDecodeError:
+        logger.error('Invalid json received')
+        await ctx.reply("Чот анек плохой попался, не покажу. Попробуй еще раз")
+        return
+
     if not (anek_path := save_anek(anek_text)):
         logger.error('Error to save "anek"')
         return
@@ -115,6 +122,7 @@ async def say(ctx: commands.Context):
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=anek_path,
     )
+    source = PCMVolumeTransformer(source, volume=2.0)
 
     voice.play(source)
 
@@ -171,11 +179,14 @@ async def play(ctx: commands.Context, youtube_url: str):
             logger.error(e)
             return
 
-        voice.play(FFmpegPCMAudio(
+        source = FFmpegPCMAudio(
             source=audio,
             executable=settings.FFMPEG_EXECUTABLE_PATH,
             **FFMPEG_OPTIONS,
-        ))
+        )
+        source = PCMVolumeTransformer(source, volume=0.6)
+
+        voice.play(source)
 
         while voice.is_playing():
             await asyncio.sleep(1)

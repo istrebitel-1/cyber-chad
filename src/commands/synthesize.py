@@ -1,8 +1,7 @@
 import asyncio
 import logging
 
-from discord.player import FFmpegPCMAudio
-from discord.player import PCMVolumeTransformer
+from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 from discord import File
 

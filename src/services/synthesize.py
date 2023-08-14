@@ -12,7 +12,7 @@ from src.constants import (
 from src.settings import get_settings
 
 
-def synthesize_text(text: str) -> str:
+def synthesize_text(text: str, loudness: str = "x-high") -> str:
     """Synthesize opus file from given text"""
     settings = get_settings()
 
@@ -39,13 +39,15 @@ def synthesize_text(text: str) -> str:
         'Authorization': f'Bearer {token_data.get("access_token")}'
     }
 
+    ssml_text = f'<speak><paint loudness="{loudness}">{text}</paint></speak>'
+
     data = session.post(
         url=SBER_TEXT_SYNTHESIZE_API_URL,
         headers={
-            'Content-Type': 'application/text',
+            'Content-Type': 'application/ssml',
             **auth_headers,
         },
-        data=text.encode(),
+        data=ssml_text.encode(),
         verify='russian_trusted_root_ca.cer',
     )
 
