@@ -2,6 +2,8 @@ import discord
 from discord.ui import View
 from discord.ext import commands
 
+from src.commands.constants import TextChannelCommands
+
 
 class PodlivaView(View):
     @discord.ui.button(
@@ -17,23 +19,15 @@ class PodlivaView(View):
         await interaction.message.delete()
 
 
-@commands.group()
-async def message_trigger(ctx: commands.Context):
+@commands.group(name='text_channel')
+async def text_channel(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
 
-@message_trigger.command(
-    name='p_help',
-)
-async def help(ctx: commands.Context):
-    """Help command"""
-    await ctx.send('Какая помощь, я podliva')
-
-
-@message_trigger.command(
-    name='test',
-    aliases=['kekus'],
+@text_channel.command(
+    name=TextChannelCommands.TRAP,
+    aliases=['test'],
 )
 async def podliva_checker(ctx: commands.Context):
     """Podliva user detection"""
@@ -41,7 +35,10 @@ async def podliva_checker(ctx: commands.Context):
     await ctx.send("А?", view=PodlivaView())
 
 
-async def setup(bot: commands.bot.Bot):
-    bot.add_command(help)
+async def setup(bot: commands.bot.Bot) -> None:
+    """Setup function for load commands module
+
+    Args:
+        bot (commands.bot.Bot): Discord bot class
+    """
     bot.add_command(podliva_checker)
-    bot.add_command(message_trigger)

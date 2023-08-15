@@ -1,10 +1,14 @@
 __pycache__/
 
+# IDE
 .vscode/*
 .idea/
+
+# Venv
 .env/
 env/
 
+# Drivers
 ffmpeg/
 
 # Distribution / packaging
@@ -27,5 +31,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Files
 audio/
 !audio/nc.mp3
+
+# Linters
+.mypy_cache/

@@ -1,3 +1,27 @@
+from enum import Enum
+
+
+class StringEnumBase(str, Enum):
+    """Base Enum class for str type"""
+    def __str__(self):
+        return self.value
+
+
+class AppMode(StringEnumBase):
+    """Application mode"""
+    DEV = 'DEV'
+    PROD = 'PROD'
+
+
+COMMAND_FILES = (
+    'emojis.py',
+    'synthesize.py',
+    'text_channel.py',
+    'voice_channel.py',
+)
+
+DEV_COMMAND_PREFIX = 'dev_'
+
 VOICE_MESSAGE_IND = 'voice-message.ogg'
 VOICE_MESSAGE_GIF = 'https://media.tenor.com/tBv6AL0fyzwAAAAC/getting-spanked-spank.gif'
 

@@ -1,13 +1,20 @@
 import asyncio
 import logging
 from json import JSONDecodeError
-from typing import Dict, Optional
+from typing import Dict
 
-import yt_dlp as youtube_dl
 from discord import File
 from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 
+from src.commands.constants import VoiceChannelCommands, DEFAULT_TRACK_TITLE, TRACK_TITLE_KEY
+from src.commands.utils import is_author_connected_to_voice
+from src.services.queue import (
+    Queue,
+    get_guild_queue,
+    run_tracks_queue,
+    get_track_info,
+)
 from src.services.aneki import save_anek, get_anek
 from src.settings import get_settings
 
@@ -21,49 +28,20 @@ async def voice(ctx: commands.Context):
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
 
-class Queue:
-    """Очередь трецков"""
-    def __init__(self) -> None:
-        self.tracks_url = []
-
-    @property
-    def is_empty(self) -> bool:
-        return self.tracks_url == []
-
-    def append(self, url) -> None:
-        """Добавление трека в куеуе"""
-        self.tracks_url.append(url)
-
-    def pop(self) -> str | None:
-        """попит левый трецк"""
-        return self.tracks_url.pop(0) if self.tracks_url else None
-
-    def clear(self) -> None:
-        """Очищает очередб"""
-        self.tracks_url = []
-
-
-def get_guild_queue(guild_id: int) -> Queue:
-    """Получение голосового канала"""
-    queue_: Queue = tracks_queue.get(guild_id) or Queue()
-
-    if queue_.is_empty:
-        tracks_queue[guild_id] = queue_
-
-    return queue_
-
-
-tracks_queue: Dict[str, Queue] = {}
+tracks_queue: Dict[int, Queue] = {}
 
 
 @voice.command(
-    name='podliva_join',
-    aliases=['join', 'get_your_ass_back_here'],
+    name=VoiceChannelCommands.JOIN,
+    aliases=['j', 'podliva_join', 'get_your_ass_back_here'],
 )
-async def join(ctx: commands.Context):
-    """Join voice channel and says 'nice c**k''"""
-    if not ctx.author.voice:
-        logger.warning(f'{ctx.author.mention} not connected to voice')
+async def join_voice_channel(ctx: commands.Context):
+    """Join voice channel and says something...
+
+    Args:
+        ctx (commands.Context): Discord context
+    """
+    if not is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -79,11 +57,15 @@ async def join(ctx: commands.Context):
 
 
 @voice.command(
-    name='podliva_leave',
-    aliases=['leave', 'fuck_you'],
+    name=VoiceChannelCommands.LEAVE,
+    aliases=['podliva_leave', 'fuck_you'],
 )
-async def leave(ctx: commands.Context):
-    """Leave voice channel"""
+async def leave_voice_channel(ctx: commands.Context):
+    """Leave voice channel
+
+    Args:
+        ctx (commands.Context): Discord context
+    """
     if ctx.voice_client:
         await ctx.guild.voice_client.disconnect()
     else:
@@ -91,13 +73,17 @@ async def leave(ctx: commands.Context):
 
 
 @voice.command(
-    name='say',
+    name=VoiceChannelCommands.JOKE,
     aliases=['anek'],
 )
-async def say(ctx: commands.Context):
-    """Say anek from mp3 file"""
-    if not ctx.author.voice:
-        logger.warning(f'{ctx.author.mention} not connected to voice')
+async def parse_and_play_random_joke(ctx: commands.Context):
+    """Get random joke from open API, send to Sber Salut API,
+      save it to file and plays in voice channel
+
+    Args:
+        ctx (commands.Context): Discord context
+    """
+    if not is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -105,7 +91,7 @@ async def say(ctx: commands.Context):
         anek_text = get_anek()
     except JSONDecodeError:
         logger.error('Invalid json received')
-        await ctx.reply("Чот анек плохой попался, не покажу. Попробуй еще раз")
+        await ctx.reply('Чот анек плохой попался, не покажу. Попробуй еще раз')
         return
 
     if not (anek_path := save_anek(anek_text)):
@@ -118,6 +104,7 @@ async def say(ctx: commands.Context):
 
     channel = ctx.message.author.voice.channel
     voice = ctx.voice_client if ctx.voice_client else await channel.connect()
+
     source = FFmpegPCMAudio(
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=anek_path,
@@ -131,104 +118,133 @@ async def say(ctx: commands.Context):
 
 
 @voice.command(
-    name='play',
+    name=VoiceChannelCommands.PLAY,
     aliases=['p'],
 )
-async def play(ctx: commands.Context, youtube_url: str):
-    """Plays youtube audio"""
-    YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'False'}
-    FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
+async def play_audio_in_voice_channel(ctx: commands.Context, youtube_url: str):
+    """Plays youtube audio
 
-    settings = get_settings()
-
-    if not ctx.author.voice:
-        logger.warning(f'{ctx.author.mention} not connected to voice')
+    Args:
+        ctx (commands.Context): Discord context
+        youtube_url (str): Url to yourube video
+    """
+    if not is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
     voice = ctx.voice_client if ctx.voice_client else await ctx.message.author.voice.channel.connect()
     voice.stop()
 
-    queue_ = get_guild_queue(ctx.guild.id)
+    queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
+
+    track_info = get_track_info(url=youtube_url)
+    track_title = track_info.get(TRACK_TITLE_KEY, DEFAULT_TRACK_TITLE)
+
     queue_.clear()
-    queue_.append(youtube_url)
+    queue_.append(url=youtube_url, title=track_title)
 
-    while True:
-        if not (url := get_guild_queue(ctx.guild.id).pop()):
-            break
-
-        with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-            info = ydl.extract_info(url, download=False)
-
-        # TODO: enum
-        allowed_quality = ('low', 'medium')
-        try:
-            audio: Optional[str] = None
-            for format_ in info['formats']:
-                if isinstance(format_, dict) and \
-                        format_.get('format_note') in allowed_quality:
-                    audio = format_['url']
-                    break
-
-            if not audio:
-                warning_message = 'Не найден контекст для воспроизведения дорожки'
-                logger.warning(warning_message)
-                await ctx.send(warning_message)
-                return
-        except Exception as e:
-            logger.error(e)
-            return
-
-        source = FFmpegPCMAudio(
-            source=audio,
-            executable=settings.FFMPEG_EXECUTABLE_PATH,
-            **FFMPEG_OPTIONS,
-        )
-        source = PCMVolumeTransformer(source, volume=0.6)
-
-        voice.play(source)
-
-        while voice.is_playing():
-            await asyncio.sleep(1)
-
-    await ctx.send('Очередь треков завершилась, я пошёл отдыхать')
+    await run_tracks_queue(
+        ctx=ctx,
+        queue_=queue_,
+        voice=voice,
+    )
 
 
 @voice.command(
-    name='queye',
-    aliases=['куеуе', 'q'],
+    name=VoiceChannelCommands.QUEUE,
+    aliases=['q'],
 )
-async def queue(ctx: commands.Context, youtube_url: str):
-    """Add track to queue"""
-    queue_: Queue | None = tracks_queue.get(ctx.guild.id) or Queue()
+async def queue_track(ctx: commands.Context, youtube_url: str):
+    """Add track to queue
 
-    if not queue_:
+    Args:
+        ctx (commands.Context): Discord context
+        youtube_url (str): Url to yourube video
+    """
+    queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
+
+    if queue_.is_empty:
         tracks_queue[ctx.guild.id] = queue_
 
-    queue_.clear()
-    queue_.append(youtube_url)
+    track_title = get_track_info(url=youtube_url).get(TRACK_TITLE_KEY, DEFAULT_TRACK_TITLE)
 
-    await ctx.send("Добавлен трецк флек$$овый")
+    queue_.append(url=youtube_url, title=track_title)
+
+    await ctx.send(f"Добавлен трецк: {track_title}")
 
 
 @voice.command(
-    name='clear',
+    name=VoiceChannelCommands.CLEAR,
+    aliases=['c'],
 )
-async def clear(ctx: commands.Context):
-    """Clear tracks queue"""
-    queue_: Queue | None = tracks_queue.get(ctx.guild.id) or Queue()
+async def clear_tracks_queue(ctx: commands.Context):
+    """Clear tracks queue
 
-    if not queue_:
-        tracks_queue[ctx.guild.id] = queue_
+    Args:
+        ctx (commands.Context): Discord context
+    """
+    queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
+
+    if queue_.is_empty:
+        tracks_queue.clear()
 
     await ctx.send("Очередь очищена")
 
 
-async def setup(bot: commands.bot.Bot):
-    bot.add_command(voice)
-    bot.add_command(join)
-    bot.add_command(leave)
-    bot.add_command(say)
-    bot.add_command(play)
-    bot.add_command(queue)
-    bot.add_command(clear)
+@voice.command(
+    name=VoiceChannelCommands.NEXT,
+    aliases=['n', 'skip'],
+)
+async def play_next_track(ctx: commands.Context, track_num: int | None = None):
+    """Plays next track from guild's queue
+
+    Args:
+        ctx (commands.Context): Discord context
+        track_num (int): Number of track in queue
+    """
+    if not is_author_connected_to_voice(ctx=ctx):
+        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
+        return
+
+    voice = ctx.voice_client if ctx.voice_client else await ctx.message.author.voice.channel.connect()
+    voice.stop()
+
+    queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
+
+    await run_tracks_queue(
+        ctx=ctx,
+        queue_=queue_,
+        voice=voice,
+        start_item=track_num - 1,
+    )
+
+
+@voice.command(
+    name=VoiceChannelCommands.LIST,
+    aliases=['l'],
+)
+async def list_guild_track_queue(ctx: commands.Context):
+    """List tracks queue
+
+    Args:
+        ctx (commands.Context): Discord context
+    """
+    queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
+
+    await ctx.send(str(queue_))
+
+
+async def setup(bot: commands.bot.Bot) -> None:
+    """Setup function for load commands module
+
+    Args:
+        bot (commands.bot.Bot): Discord bot class
+    """
+    bot.add_command(clear_tracks_queue)
+    bot.add_command(join_voice_channel)
+    bot.add_command(leave_voice_channel)
+    bot.add_command(list_guild_track_queue)
+    bot.add_command(play_audio_in_voice_channel)
+    bot.add_command(play_next_track)
+    bot.add_command(queue_track)
+    bot.add_command(parse_and_play_random_joke)
