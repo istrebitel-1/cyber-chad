@@ -126,7 +126,6 @@ async def run_tracks_queue(
                         format_.get('format_note') in list(YoutubeQualityType):
                     audio = format_['url']
                     break
-
             if not audio:
                 warning_message = 'Не найден контекст для воспроизведения дорожки'
                 logger.warning(warning_message)
