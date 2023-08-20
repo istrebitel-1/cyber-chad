@@ -7,14 +7,16 @@ from discord import VoiceClient
 from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 
-from src.commands.constants import (
-    YoutubeQualityType,
+from src.core.utils import get_yandex_music_api_client
+from src.commands.constants import YoutubeQualityType, DEFAULT_TRACK_TITLE, TRACK_TITLE_KEY
+from src.services.constants import (
+    TrackSource,
     YDL_OPTIONS,
     FFMPEG_OPTIONS,
 )
 from src.services.dataclasses import TrackInfo
+from src.services.track_info import track_source_parser
 from src.settings import get_settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,23 +27,24 @@ class Queue:
         self.tracks_info: List[TrackInfo] = []
 
     def __str__(self) -> str:
-        tracks_str = ''.join([f'{i + 1}. {track.title}\n' for i, track in enumerate(self.tracks_info)])
+        if not self.tracks_info:
+            return 'Нету трецков в очереди, сталкер...'
 
-        return f'```Playing next:\n\n{tracks_str}\n```'
+        tracks_str = ''.join([
+            f'{i + 1}. {track.title} [{track.source}]\n'
+            for i, track in enumerate(self.tracks_info)
+        ])
+
+        return f'```Далее в очереди:\n\n{tracks_str}\n```'
 
     @property
     def is_empty(self) -> bool:
         """Is queue empty"""
         return self.tracks_info == []
 
-    def append(self, url: str, title: str) -> None:
+    def append(self, track_info: TrackInfo) -> None:
         """Add track to queue"""
-        self.tracks_info.append(
-            TrackInfo(
-                url=url,
-                title=title,
-            )
-        )
+        self.tracks_info.append(track_info)
 
     def pop(self, item: int) -> TrackInfo | None:
         """Pop track from queue"""
@@ -70,25 +73,51 @@ def get_guild_queue(tracks_queue: Dict[int, Queue], guild_id: int) -> Queue:
     return queue_
 
 
-def get_track_info(url: str, process: bool = False) -> Dict:
-    """Gets youtube video info
+def get_track_info(
+        url: str,
+        download: bool | None = None,
+        process: bool | None = None,
+) -> TrackInfo:
+    """Gets track info
 
     Args:
         url (str): youtube url
 
     Returns:
-        Dict: Video info
+        TrackInfo: Track info
     """
-    info = None
+    if not download:
+        download = False
 
-    with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
-        info = ydl.extract_info(url, download=False, process=process)
+    if not process:
+        process = False
 
-    if isinstance(info, dict):
-        return info
+    # TODO: Разбить парсер по методам или классам
+    match track_source_parser(track_url=url):
+        case TrackSource.YANDEX_MUSIC:
+            client = get_yandex_music_api_client()
 
-    # TODO: Raise
-    return {}
+            track_id = int(url.split('/')[-1])
+            info = client.tracks(track_id)[0]
+
+            return TrackInfo(
+                url=url,
+                title=f'{", ".join(info.artists_name())} - {info.title}',
+                source=TrackSource.YANDEX_MUSIC,
+                extra=info.to_dict(),
+            )
+
+        case TrackSource.YOUTUBE:
+            with youtube_dl.YoutubeDL(YDL_OPTIONS) as ydl:
+                info = ydl.extract_info(url, download=False, process=process)
+
+            if isinstance(info, dict):
+                return TrackInfo(
+                    url=url,
+                    title=info.get(TRACK_TITLE_KEY, DEFAULT_TRACK_TITLE),
+                    source=TrackSource.YOUTUBE,
+                    extra=info,
+                )
 
 
 async def run_tracks_queue(
@@ -117,15 +146,24 @@ async def run_tracks_queue(
         if not (track := queue_.pop(start_item)):
             break
 
-        info = get_track_info(url=track.url)
-
         try:
             audio: Optional[str] = None
-            for format_ in info['formats']:
-                if isinstance(format_, dict) and \
-                        format_.get('format_note') in list(YoutubeQualityType):
-                    audio = format_['url']
-                    break
+
+            # TODO: отдельный метод
+            if track.source == TrackSource.YOUTUBE:
+                for format_ in track.extra['formats']:
+                    if isinstance(format_, dict) and \
+                            format_.get('format_note') in list(YoutubeQualityType):
+                        audio = format_['url']
+                        break
+            elif track.source == TrackSource.YANDEX_MUSIC:
+                # TODO: кринж полнейший, полностью переделать
+                track_id = track.extra['real_id']
+
+                client = get_yandex_music_api_client()
+
+                audio = client.tracks(track_id)[0].get_download_info()[0].get_direct_link()
+
             if not audio:
                 warning_message = 'Не найден контекст для воспроизведения дорожки'
                 logger.warning(warning_message)

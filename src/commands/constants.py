@@ -38,12 +38,5 @@ class VoiceChannelCommands(StringEnumBase):
     QUEUE = f'{get_command_prefix()}queue'
 
 
-YDL_OPTIONS = {
-    'format': 'bestaudio',
-    'noplaylist': True,
-    'ignoreerrors': True,
-}
-FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
-
 DEFAULT_TRACK_TITLE = 'Без названия - Неизвестен'
 TRACK_TITLE_KEY = 'title'
