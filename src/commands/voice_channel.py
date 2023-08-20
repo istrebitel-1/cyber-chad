@@ -7,7 +7,7 @@ from discord import File
 from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from discord.ext import commands
 
-from src.commands.constants import VoiceChannelCommands, DEFAULT_TRACK_TITLE, TRACK_TITLE_KEY
+from src.commands.constants import VoiceChannelCommands
 from src.commands.utils import is_author_connected_to_voice
 from src.services.queue import (
     Queue,
@@ -41,7 +41,7 @@ async def join_voice_channel(ctx: commands.Context):
     Args:
         ctx (commands.Context): Discord context
     """
-    if not is_author_connected_to_voice(ctx=ctx):
+    if not await is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -83,7 +83,7 @@ async def parse_and_play_random_joke(ctx: commands.Context):
     Args:
         ctx (commands.Context): Discord context
     """
-    if not is_author_connected_to_voice(ctx=ctx):
+    if not await is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -121,14 +121,14 @@ async def parse_and_play_random_joke(ctx: commands.Context):
     name=VoiceChannelCommands.PLAY,
     aliases=['p'],
 )
-async def play_audio_in_voice_channel(ctx: commands.Context, youtube_url: str):
+async def play_audio_in_voice_channel(ctx: commands.Context, track_url: str):
     """Plays youtube audio
 
     Args:
         ctx (commands.Context): Discord context
-        youtube_url (str): Url to yourube video
+        track_str (str): Url to yourube video / url to yandex_music
     """
-    if not is_author_connected_to_voice(ctx=ctx):
+    if not await is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -137,11 +137,10 @@ async def play_audio_in_voice_channel(ctx: commands.Context, youtube_url: str):
 
     queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
 
-    track_info = get_track_info(url=youtube_url)
-    track_title = track_info.get(TRACK_TITLE_KEY, DEFAULT_TRACK_TITLE)
+    track_info = get_track_info(url=track_url)
 
     queue_.clear()
-    queue_.append(url=youtube_url, title=track_title)
+    queue_.append(track_info=track_info)
 
     await run_tracks_queue(
         ctx=ctx,
@@ -166,11 +165,11 @@ async def queue_track(ctx: commands.Context, youtube_url: str):
     if queue_.is_empty:
         tracks_queue[ctx.guild.id] = queue_
 
-    track_title = get_track_info(url=youtube_url).get(TRACK_TITLE_KEY, DEFAULT_TRACK_TITLE)
+    track_info = get_track_info(url=youtube_url)
 
-    queue_.append(url=youtube_url, title=track_title)
+    queue_.append(track_info=track_info)
 
-    await ctx.send(f"Добавлен трецк: {track_title}")
+    await ctx.send(f"Добавлен трецк: {track_info.title}")
 
 
 @voice.command(
@@ -202,7 +201,7 @@ async def play_next_track(ctx: commands.Context, track_num: int | None = None):
         ctx (commands.Context): Discord context
         track_num (int): Number of track in queue
     """
-    if not is_author_connected_to_voice(ctx=ctx):
+    if not await is_author_connected_to_voice(ctx=ctx):
         await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
@@ -211,11 +210,13 @@ async def play_next_track(ctx: commands.Context, track_num: int | None = None):
 
     queue_: Queue = get_guild_queue(tracks_queue=tracks_queue, guild_id=ctx.guild.id)
 
+    start_item = track_num - 1 if track_num else None
+
     await run_tracks_queue(
         ctx=ctx,
         queue_=queue_,
         voice=voice,
-        start_item=track_num - 1,
+        start_item=start_item,
     )
 
 
