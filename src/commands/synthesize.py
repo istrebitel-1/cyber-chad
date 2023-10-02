@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @commands.group()
-async def synthesize(ctx: commands.Context):
+async def synthesize(ctx: commands.Context, /):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -23,7 +23,7 @@ async def synthesize(ctx: commands.Context):
     name=SynthesizeCommands.SYNTHESIZE,
     aliases=['s'],
 )
-async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: bool = True) -> None:
+async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: bool = True, /) -> None:
     """Synthesize speech from text
 
     Args:
@@ -52,18 +52,18 @@ async def synthesize_sentence(ctx: commands.Context, text: str, play_to_voice: b
     channel = ctx.message.author.voice.channel
     voice = ctx.voice_client if ctx.voice_client else await channel.connect()
     source = FFmpegPCMAudio(
-        executable=settings.FFMPEG_EXECUTABLE_PATH,
+        executable=str(settings.FFMPEG_EXECUTABLE_PATH),
         source=audio_file,
     )
-    source = PCMVolumeTransformer(source, volume=2.0)
+    source_transformed = PCMVolumeTransformer(source, volume=2.0)
 
-    voice.play(source)
+    voice.play(source_transformed)
 
     while voice.is_playing():
         await asyncio.sleep(1)
 
 
-async def setup(bot: commands.bot.Bot) -> None:
+def setup(bot: commands.bot.Bot) -> None:
     """Setup function for load commands module
 
     Args:

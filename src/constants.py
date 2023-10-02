@@ -18,6 +18,7 @@ COMMAND_FILES = (
     'synthesize.py',
     'text_channel.py',
     'voice_channel.py',
+    'companion_completion.py',
 )
 
 DEV_COMMAND_PREFIX = 'dev_'
@@ -29,4 +30,5 @@ GIGACHADS_GUILD_ID = 715666531802939393
 
 SBER_SALUTE_API_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'
 SBER_TEXT_SYNTHESIZE_API_URL = 'https://smartspeech.sber.ru/rest/v1/text:synthesize'
+SBER_SPEECH_RECOGNIZE_API_URL = 'https://smartspeech.sber.ru/rest/v1/speech:recognize'
 SBER_SERVICE_NAME = 'SALUTE_SPEECH_PERS'

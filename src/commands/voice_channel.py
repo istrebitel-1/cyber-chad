@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 @commands.group()
-async def voice(ctx: commands.Context):
+async def voice(ctx: commands.Context, /):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -35,14 +35,13 @@ tracks_queue: Dict[int, Queue] = {}
     name=VoiceChannelCommands.JOIN,
     aliases=['j', 'podliva_join', 'get_your_ass_back_here'],
 )
-async def join_voice_channel(ctx: commands.Context):
+async def join_voice_channel(ctx: commands.Context, /):
     """Join voice channel and says something...
 
     Args:
         ctx (commands.Context): Discord context
     """
     if not await is_author_connected_to_voice(ctx=ctx):
-        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
     settings = get_settings()
@@ -60,7 +59,7 @@ async def join_voice_channel(ctx: commands.Context):
     name=VoiceChannelCommands.LEAVE,
     aliases=['podliva_leave', 'fuck_you'],
 )
-async def leave_voice_channel(ctx: commands.Context):
+async def leave_voice_channel(ctx: commands.Context, /):
     """Leave voice channel
 
     Args:
@@ -76,7 +75,7 @@ async def leave_voice_channel(ctx: commands.Context):
     name=VoiceChannelCommands.JOKE,
     aliases=['anek'],
 )
-async def parse_and_play_random_joke(ctx: commands.Context):
+async def parse_and_play_random_joke(ctx: commands.Context, /):
     """Get random joke from open API, send to Sber Salut API,
       save it to file and plays in voice channel
 
@@ -84,7 +83,6 @@ async def parse_and_play_random_joke(ctx: commands.Context):
         ctx (commands.Context): Discord context
     """
     if not await is_author_connected_to_voice(ctx=ctx):
-        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
     try:
@@ -109,9 +107,9 @@ async def parse_and_play_random_joke(ctx: commands.Context):
         executable=settings.FFMPEG_EXECUTABLE_PATH,
         source=anek_path,
     )
-    source = PCMVolumeTransformer(source, volume=2.0)
+    source_transformed = PCMVolumeTransformer(source, volume=2.0)
 
-    voice.play(source)
+    voice.play(source_transformed)
 
     while voice.is_playing():
         await asyncio.sleep(1)
@@ -121,7 +119,7 @@ async def parse_and_play_random_joke(ctx: commands.Context):
     name=VoiceChannelCommands.PLAY,
     aliases=['p'],
 )
-async def play_audio_in_voice_channel(ctx: commands.Context, track_url: str):
+async def play_audio_in_voice_channel(ctx: commands.Context, track_url: str, /):
     """Plays youtube audio
 
     Args:
@@ -129,7 +127,6 @@ async def play_audio_in_voice_channel(ctx: commands.Context, track_url: str):
         track_str (str): Url to yourube video / url to yandex_music
     """
     if not await is_author_connected_to_voice(ctx=ctx):
-        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
     voice = ctx.voice_client if ctx.voice_client else await ctx.message.author.voice.channel.connect()
@@ -153,7 +150,7 @@ async def play_audio_in_voice_channel(ctx: commands.Context, track_url: str):
     name=VoiceChannelCommands.QUEUE,
     aliases=['q'],
 )
-async def queue_track(ctx: commands.Context, youtube_url: str):
+async def queue_track(ctx: commands.Context, youtube_url: str, /):
     """Add track to queue
 
     Args:
@@ -176,7 +173,7 @@ async def queue_track(ctx: commands.Context, youtube_url: str):
     name=VoiceChannelCommands.CLEAR,
     aliases=['c'],
 )
-async def clear_tracks_queue(ctx: commands.Context):
+async def clear_tracks_queue(ctx: commands.Context, /):
     """Clear tracks queue
 
     Args:
@@ -194,7 +191,7 @@ async def clear_tracks_queue(ctx: commands.Context):
     name=VoiceChannelCommands.NEXT,
     aliases=['n', 'skip'],
 )
-async def play_next_track(ctx: commands.Context, track_num: int | None = None):
+async def play_next_track(ctx: commands.Context, track_num: int | None = None, /):
     """Plays next track from guild's queue
 
     Args:
@@ -202,7 +199,6 @@ async def play_next_track(ctx: commands.Context, track_num: int | None = None):
         track_num (int): Number of track in queue
     """
     if not await is_author_connected_to_voice(ctx=ctx):
-        await ctx.send(f'{ctx.author.mention} Подключись к голосовому каналу, сталкер')
         return
 
     voice = ctx.voice_client if ctx.voice_client else await ctx.message.author.voice.channel.connect()
@@ -224,7 +220,7 @@ async def play_next_track(ctx: commands.Context, track_num: int | None = None):
     name=VoiceChannelCommands.LIST,
     aliases=['l'],
 )
-async def list_guild_track_queue(ctx: commands.Context):
+async def list_guild_track_queue(ctx: commands.Context, /):
     """List tracks queue
 
     Args:
@@ -235,7 +231,7 @@ async def list_guild_track_queue(ctx: commands.Context):
     await ctx.send(str(queue_))
 
 
-async def setup(bot: commands.bot.Bot) -> None:
+def setup(bot: commands.bot.Bot) -> None:
     """Setup function for load commands module
 
     Args:

@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-from yandex_music import Client
+from yandex_music import Client  # type: ignore
 
 from src.core.exceptions import YandexMusicTokenExpired
 from src.constants import AppMode, DEV_COMMAND_PREFIX

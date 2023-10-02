@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 @commands.group()
-async def emojis(ctx: commands.Context):
+async def emojis(ctx: commands.Context, /):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -24,6 +24,7 @@ async def react(
         requested_emoji: str,
         msg_id: int | None = None,
         guild_id: int | None = None,
+        /,
 ) -> None:
     """Send reaction to message
 
@@ -56,6 +57,7 @@ async def emoji(
         requested_emoji: str,
         guild_id: int | None = None,
         qnt: int = 1,
+        /,
 ) -> None:
     """Send GuildID or `Gigachad's club` emoji
 
@@ -87,7 +89,7 @@ async def emoji(
         await ctx.send('Я сломався <:bonk:751150126046904532>')
 
 
-async def setup(bot: commands.bot.Bot) -> None:
+def setup(bot: commands.bot.Bot) -> None:
     """Setup function for load commands module
 
     Args:

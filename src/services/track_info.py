@@ -8,7 +8,7 @@ from src.services.constants import TrackSource
 logger = logging.getLogger(__name__)
 
 
-def track_source_parser(track_url: AnyHttpUrl) -> TrackSource:
+def track_source_parser(track_url: AnyHttpUrl | str) -> TrackSource:
     """Parse source of the track
 
     Args:
@@ -17,6 +17,8 @@ def track_source_parser(track_url: AnyHttpUrl) -> TrackSource:
     Returns:
         TrackSource: Source enum value
     """
+    track_url = AnyHttpUrl(track_url)
+
     if 'yandex' in track_url:
         return TrackSource.YANDEX_MUSIC
 
