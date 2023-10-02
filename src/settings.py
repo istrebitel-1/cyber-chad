@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     YANDEX_MUSIC_TOKEN: str
     YANDEX_MUSIC_TOKEN_EXP_DATE: datetime = datetime(2024, 8, 15)
 
+    OPENAI_TOKEN: str
+
 
 def get_settings() -> Settings:
     """Get app settings"""

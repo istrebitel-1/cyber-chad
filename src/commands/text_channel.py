@@ -20,7 +20,7 @@ class PodlivaView(View):
 
 
 @commands.group(name='text_channel')
-async def text_channel(ctx: commands.Context):
+async def text_channel(ctx: commands.Context, /):
     if ctx.invoked_subcommand is None:
         await ctx.send(f"No, {ctx.subcommand_passed} does not belong to simple")
 
@@ -29,13 +29,13 @@ async def text_channel(ctx: commands.Context):
     name=TextChannelCommands.TRAP,
     aliases=['test'],
 )
-async def podliva_checker(ctx: commands.Context):
+async def podliva_checker(ctx: commands.Context, /):
     """Podliva user detection"""
     await ctx.message.delete()
     await ctx.send("А?", view=PodlivaView())
 
 
-async def setup(bot: commands.bot.Bot) -> None:
+def setup(bot: commands.bot.Bot) -> None:
     """Setup function for load commands module
 
     Args:

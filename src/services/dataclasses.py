@@ -13,4 +13,4 @@ class TrackInfo:
     url: str
     title: str
     source: TrackSource
-    extra: Dict | None
+    extra: Dict | None = None

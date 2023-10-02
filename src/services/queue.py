@@ -119,6 +119,8 @@ def get_track_info(
                     extra=info,
                 )
 
+    raise ValueError(f'Unknown source: {url}')
+
 
 async def run_tracks_queue(
         ctx: commands.Context,
@@ -149,12 +151,18 @@ async def run_tracks_queue(
         try:
             audio: Optional[str] = None
 
+            if not track.extra:
+                raise KeyError(f'Not found extra parameters: {track}')
+
             # TODO: отдельный метод
             if track.source == TrackSource.YOUTUBE:
-                for format_ in track.extra['formats']:
+                if not (formats := track.extra.get('formats')):
+                    raise KeyError(f'Not found formats parameters: {track.extra}')
+
+                for format_ in formats:
                     if isinstance(format_, dict) and \
                             format_.get('format_note') in list(YoutubeQualityType):
-                        audio = format_['url']
+                        audio = format_.get('url')
                         break
             elif track.source == TrackSource.YANDEX_MUSIC:
                 # TODO: кринж полнейший, полностью переделать
@@ -175,12 +183,12 @@ async def run_tracks_queue(
 
         source = FFmpegPCMAudio(
             source=audio,
-            executable=settings.FFMPEG_EXECUTABLE_PATH,
-            **FFMPEG_OPTIONS,
+            executable=str(settings.FFMPEG_EXECUTABLE_PATH),
+            **FFMPEG_OPTIONS,  # type: ignore
         )
-        source = PCMVolumeTransformer(source, volume=0.6)
+        transformed_source = PCMVolumeTransformer(source, volume=0.6)
 
-        voice.play(source)
+        voice.play(transformed_source)
 
         while voice.is_playing():
             await asyncio.sleep(1)

@@ -46,7 +46,7 @@ async def on_ready():
             continue
 
         module = f'src.commands.{command_file.name[:-3]}'
-        await bot.load_extension(module)
+        bot.load_extension(module, package=f'.{module}')
 
         logger.debug(f'Loaded module {module}')
 

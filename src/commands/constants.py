@@ -9,6 +9,11 @@ class YoutubeQualityType(StringEnumBase):
     MEDIUM = 'medium'
 
 
+class CompanionCompletionCommands(StringEnumBase):
+    """Base command for `Companion completion` module"""
+    ASK = f'{get_command_prefix()}ask'
+
+
 class EmojisCommands(StringEnumBase):
     """Base command for Emojis module"""
     EMOJI = f'{get_command_prefix()}emoji'
