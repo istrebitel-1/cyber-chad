@@ -6,8 +6,8 @@ import requests
 
 from src.constants import (
     SBER_TEXT_SYNTHESIZE_API_URL,
-    SBER_SALUTE_API_URL,
-    SBER_SERVICE_NAME
+    SBER_AUTH_API_URL,
+    SBER_SALUTE_SCOPE
 )
 from src.settings import get_settings
 
@@ -21,7 +21,7 @@ def synthesize_text(text: str, loudness: str = "x-high") -> str:
     session = requests.Session()
 
     response = session.post(
-        url=SBER_SALUTE_API_URL,
+        url=SBER_AUTH_API_URL,
         headers={
             'Authorization': f'Basic {settings.SBER_SALUTE_AUTH_DATA}',
             'RqUID': request_uuid,
@@ -29,7 +29,7 @@ def synthesize_text(text: str, loudness: str = "x-high") -> str:
         },
         verify='russian_trusted_root_ca.cer',
         data={
-            'scope': SBER_SERVICE_NAME,
+            'scope': SBER_SALUTE_SCOPE,
         }
     )
 

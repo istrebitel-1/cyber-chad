@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseSettings, AnyHttpUrl
 
-from src.constants import AppMode
+from src.constants import AppMode, CompletionModel
 
 
 class Settings(BaseSettings):
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     APP_MODE: AppMode = AppMode.DEV
     FFMPEG_EXECUTABLE_PATH: str | Path = 'ffmpeg/ffmpeg.exe'
 
-    JOKES_URL: AnyHttpUrl = 'http://rzhunemogu.ru/RandJSON.aspx?CType=1'
+    JOKES_URL: AnyHttpUrl | str = 'http://rzhunemogu.ru/RandJSON.aspx?CType=1'
 
     SBER_SALUTE_CLIENT_SECRET: str
     SBER_SALUTE_AUTH_DATA: str
@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     YANDEX_MUSIC_TOKEN: str
     YANDEX_MUSIC_TOKEN_EXP_DATE: datetime = datetime(2024, 8, 15)
 
+    COMPLETION_MODEL: CompletionModel
+
     OPENAI_TOKEN: str
+    SBER_GIGACHAT_TOKEN: str
 
 
 def get_settings() -> Settings:
