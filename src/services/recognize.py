@@ -8,8 +8,8 @@ import requests
 
 from src.constants import (
     SBER_SPEECH_RECOGNIZE_API_URL,
-    SBER_SALUTE_API_URL,
-    SBER_SERVICE_NAME
+    SBER_AUTH_API_URL,
+    SBER_SALUTE_SCOPE
 )
 from src.settings import get_settings
 
@@ -30,7 +30,7 @@ async def recognize_audio(file: BytesIO) -> str:
     session = requests.Session()
 
     response = session.post(
-        url=SBER_SALUTE_API_URL,
+        url=SBER_AUTH_API_URL,
         headers={
             'Authorization': f'Basic {settings.SBER_SALUTE_AUTH_DATA}',
             'RqUID': request_uuid,
@@ -38,7 +38,7 @@ async def recognize_audio(file: BytesIO) -> str:
         },
         verify='russian_trusted_root_ca.cer',
         data={
-            'scope': SBER_SERVICE_NAME,
+            'scope': SBER_SALUTE_SCOPE,
         }
     )
 

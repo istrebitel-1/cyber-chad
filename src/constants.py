@@ -13,6 +13,12 @@ class AppMode(StringEnumBase):
     PROD = 'PROD'
 
 
+class CompletionModel(StringEnumBase):
+    """Completion Model"""
+    OPENAI = "OPENAI"
+    GIGACHAT = "GIGACHAT"
+
+
 COMMAND_FILES = (
     'emojis.py',
     'synthesize.py',
@@ -28,7 +34,9 @@ VOICE_MESSAGE_GIF = 'https://media.tenor.com/tBv6AL0fyzwAAAAC/getting-spanked-sp
 
 GIGACHADS_GUILD_ID = 715666531802939393
 
-SBER_SALUTE_API_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'
+SBER_AUTH_API_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'
 SBER_TEXT_SYNTHESIZE_API_URL = 'https://smartspeech.sber.ru/rest/v1/text:synthesize'
 SBER_SPEECH_RECOGNIZE_API_URL = 'https://smartspeech.sber.ru/rest/v1/speech:recognize'
-SBER_SERVICE_NAME = 'SALUTE_SPEECH_PERS'
+SBER_SALUTE_SCOPE = 'SALUTE_SPEECH_PERS'
+SBER_GIGACHAT_API_URL = 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions'
+SBER_GIGACHAT_SCOPE = 'GIGACHAT_API_PERS'

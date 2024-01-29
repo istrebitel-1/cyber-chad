@@ -11,10 +11,11 @@ class PodlivaView(View):
         label='WOW!',
         style=discord.ButtonStyle.green,
     )
-    async def button_callback(self, interaction: discord.Interaction, button):
+    async def button_callback(self, button: discord.Button, interaction: discord.Interaction, /):
+        user_mention = interaction.user.mention if interaction.user else '@everyone'
+
         await interaction.response.send_message(
-            f'Получается, что {interaction.user.mention} - подлива <a:PETTHEPEEPO:749651053288357979>',
-            # view=hihik_view,
+            f'Получается, что {user_mention} - подлива <a:PETTHEPEEPO:749651053288357979>',
         )
         await interaction.message.delete()
 
